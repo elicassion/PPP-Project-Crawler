@@ -47,6 +47,7 @@ async def getPage(session, n):
 		# return await r.text()
 
 def crawlerSync():
+	start = time.time()
 	for i in range(1, MAX_PAGE+1):
 		r = requests.post(url, headers=headers, data = {'queryPage': i})
 		# print (r.json())
@@ -62,9 +63,11 @@ def crawler():
 		st = i*100+1
 		ed = min(st+99, MAX_PAGE)
 		loop = asyncio.get_event_loop()
+		tasks = []
 		with aiohttp.ClientSession(loop=loop) as session:
-			tasks = [asyncio.ensure_future(getPage(session, j)) for j in range(st, ed+1)]
-			loop.run_until_complete(asyncio.wait(tasks))
+			for j in range(st, ed+1):
+				tasks.append(asyncio.ensure_future(getPage(session, j)))
+			loop.run_until_complete(asyncio.gather(*tasks))
 			for task in tasks:
 				res.append(task.result())
 				# print (res)
