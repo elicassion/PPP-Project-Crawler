@@ -1,33 +1,30 @@
 import time, os
 import csv, codecs
-csvfile = codecs.open('PPPProjects_Info.csv', 'r', 'utf-8')
-newfile = codecs.open('PPPProjects_Info_20180103.csv', 'w', 'utf_8_sig')
-flag = False
-content = []
-writer = csv.writer(newfile)
-writer.writerow(['项目名称', '省', '市', '区','发起时间', '投资金额', '发起人', '类型', 'RID'])
-count = 1
-for line in csvfile:
-	if not flag:
-		flag = True
-		continue
-	line = line[:-1]
-	tokens = line.split(',')
-	if len(tokens) == 1:
-		a = csvfile.readline()
-		line = line + a
-		tokens = line.split(',')
-	try:
-		locations = tokens[1].split(' > ')
-		# a = csvfile.readline()
-		# line = line + a
-	except:
-		print (count, line)
-		exit()
-	if len(locations) < 3:
-		for i in range(3 - len(locations)):
-			locations.append('')
-	newline = [tokens[0]] + locations + tokens[2:-1] + [tokens[-1].strip()]
-	writer.writerow(newline)
-	count += 1
-csvfile.close()
+import pandas as pd
+import numpy as np
+# csvfile = codecs.open('PPPProjects_Info.csv', 'r', 'utf-8')
+df = pd.read_csv('PPPProjects_Info.csv')
+# print (df['投资金额'].values.tolist())
+# print (type(csvfile))
+
+ninvest = []
+for item in df['投资金额'].values.tolist():
+	ninvest.append(item.replace(",", '').strip())
+# print (ninvest)
+df['投资金额'] = ninvest
+nprovince = []
+ncity = []
+ndistrict = []
+for item in df['地点'].values.tolist():
+	tokens = item.split(' > ')
+	if len(tokens) < 3:
+		for i in range(3-len(tokens)):
+			tokens.append('')
+	nprovince.append(tokens[0])
+	ncity.append(tokens[1])
+	ndistrict.append(tokens[2])
+df.drop('地点', axis=1, inplace=True)
+df.insert(1, '省', nprovince)
+df.insert(2, '市', ncity)
+df.insert(3, '区', ndistrict)
+df.to_csv('PPPProjects_Info_20180103.csv', index=False, header=True)
